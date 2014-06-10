@@ -14,10 +14,10 @@ XEncoder = (function (global) {
         validateString,
         validateCharCodes;
 
-    defaultChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        + 'abcdefghijklmnopqrstuvwxyz'
+    defaultChars = '+/'
         + '0123456789'
-        + '+/';
+        + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        + 'abcdefghijklmnopqrstuvwxyz';
 
     XEncoder = function XEncoder(chars) {
         var charString,
