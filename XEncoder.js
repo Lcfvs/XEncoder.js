@@ -19,7 +19,7 @@ XEncoder = (function (global) {
         + '0123456789'
         + '+/';
     
-    XEncoder = function XEncoder(chars, delimiter) {
+    XEncoder = function XEncoder(chars) {
         var charString,
             delimiter,
             patternString,
