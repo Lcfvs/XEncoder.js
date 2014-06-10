@@ -240,7 +240,8 @@ XEncoder = (function (global) {
             pattern,
             encodingLength,
             lastIndex,
-            isValid;
+            isValid,
+            hasSameCharsetLength;
         
         delimiter = this.delimiter;
         pattern = this.pattern;
@@ -249,15 +250,23 @@ XEncoder = (function (global) {
 
         isValid = data === ''
         || data.indexOf(delimiter) === lastIndex
-        && lastIndex % encodingLength === 0
-        && + data.match(pattern)[2] === charsetLength;
+        && lastIndex % encodingLength === 0;
         
-        if (isValid) {
+        if (!isValid) {
+            throw new Error(
+                'Invalid XEncoder string: '
+                + data
+            );
+        }
+        
+        hasSameCharsetLength = + data.match(pattern)[2] === charsetLength;
+        
+        if (hasSameCharsetLength) {
             return true;
         }
         
         throw new Error(
-            'Invalid XEncoder string: '
+            'Invalid XEncoder charset: '
             + data
         );
     };
