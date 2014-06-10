@@ -2,7 +2,7 @@ var XEncoder;
 
 XEncoder = (function (global) {
     'use strict';
-    
+
     var defaultChars,
         charsetLength,
         XEncoder,
@@ -18,34 +18,34 @@ XEncoder = (function (global) {
         + 'abcdefghijklmnopqrstuvwxyz'
         + '0123456789'
         + '+/';
-    
+
     XEncoder = function XEncoder(chars) {
         var charString,
             delimiter,
             patternString,
             pattern,
             context;
-        
+
         charString = chars
         || defaultChars;
-        
+
         delimiter = '='
             + charsetLength
             + '=';
-        
+
         patternString = '^(['
             + charString
             + ']+)=(\\d+)=$';
-        
+
         pattern = new RegExp(patternString);
-        
+
         context = {
             chars: charString,
             delimiter: delimiter,
             pattern: pattern,
             encodingLength: getEncodingLength(charString.length)
         };
-        
+
         return {
             encode: encode.bind(
                 context,
@@ -57,22 +57,22 @@ XEncoder = (function (global) {
             )
         };
     };
-    
+
     getEncodingLength = function getEncodingLength(charsLength) {
         var encodingLength,
-            charCode;
-            
+            rest;
+
         encodingLength = 0;
-        
-        charCode = charsetLength;
-        
-        for (; charCode !== 0; encodingLength += 1) {
-            charCode = (charCode - charCode % charsLength) / charsLength;
+
+        rest = charsetLength - 1;
+
+        for (; rest!== 0; encodingLength += 1) {
+            rest = (rest - rest % charsLength) / charsLength;
         }
 
         return encodingLength;
     };
-    
+
     encode = function encode(validate, data) {
         var chars,
             delimiter,
@@ -85,7 +85,7 @@ XEncoder = (function (global) {
             charCode,
             encodedChar,
             rest;
-        
+
         chars = this.chars;
         delimiter = this.delimiter;
         encodingLength = this.encodingLength;
@@ -93,31 +93,31 @@ XEncoder = (function (global) {
         encodedData = '';
         dataIndex = 0;
         dataLength = data.length;
-        
+
         charCodes = data instanceof Array
             ? [].concat(data)
             : toCharCodes(data);
-        
+
         validate(charCodes);
-        
+
         for (; dataIndex < dataLength; dataIndex += 1) {
             charCode = charCodes[dataIndex];
             encodedChar = '';
-            
+
             while (encodedChar.length < encodingLength) {
-                rest = charCode % 64;
-                charCode = (charCode - rest) / 64;
-                encodedChar += chars.charAt(rest);
+                rest = charCode % charsLength;
+                charCode = (charCode - rest) / charsLength;
+                encodedChar = chars.charAt(rest) + encodedChar;
             }
-            
+
             encodedData += encodedChar;
         }
-        
+
         encodedData += delimiter;
-        
+
         return encodedData;
     };
-    
+
     decode = function decode(validate, data) {
         var charcodes,
             chars,
@@ -131,9 +131,9 @@ XEncoder = (function (global) {
             charIndex,
             encodedChar,
             rest;
-        
+
         validate(data);
-        
+
         chars = this.chars;
         delimiter = this.delimiter;
         encodingLength = this.encodingLength;
@@ -141,25 +141,25 @@ XEncoder = (function (global) {
         decodedData = [];
         dataIndex = 0;
         dataLength = data.length - delimiter.length;
-        
+
         for (; dataIndex < dataLength; dataIndex += encodingLength) {
             charCode = 0;
-            charIndex = 0;
-            
+            charIndex = encodingLength - 1;
+
             encodedChar = data.substr(
                 dataIndex,
                 encodingLength
             );
-            
-            for (; charIndex < encodingLength; charIndex += 1) {
+
+            for (; charIndex > 0; charIndex -= 1) {
                 rest = chars.indexOf(encodedChar[charIndex]);
-                
-                charCode += rest * Math.pow(
+
+                charCode = rest * Math.pow(
                     charsLength,
-                    charIndex
-                );
+                    encodingLength - charIndex - 1
+                ) + charCode;
             }
-            
+
             decodedData.push(charCode);
         }
 
@@ -167,17 +167,17 @@ XEncoder = (function (global) {
             global,
             decodedData
         );
-        
+
         return decodedData;
     };
-    
+
     toString = (function () {
         var fromCharCode,
             toStr,
             toString;
 
         fromCharCode = String.fromCharCode;
-        
+
         toStr = fromCharCode.apply.bind(
             fromCharCode,
             String
@@ -201,7 +201,7 @@ XEncoder = (function (global) {
 
         return toString;
     }());
-        
+
     toCharCodes = (function () {
         var charCodeAt,
             toCharCode,
@@ -225,7 +225,7 @@ XEncoder = (function (global) {
                     str,
                     iterator
                 );
-                
+
                 charCodes.push(charCode);
             }
 
@@ -242,7 +242,7 @@ XEncoder = (function (global) {
             lastIndex,
             isValid,
             hasSameCharsetLength;
-        
+
         delimiter = this.delimiter;
         pattern = this.pattern;
         encodingLength = this.encodingLength;
@@ -251,59 +251,59 @@ XEncoder = (function (global) {
         isValid = data === ''
         || data.indexOf(delimiter) === lastIndex
         && lastIndex % encodingLength === 0;
-        
+
         if (!isValid) {
             throw new Error(
                 'Invalid XEncoder string: '
                 + data
             );
         }
-        
+
         hasSameCharsetLength = + data.match(pattern)[2] === charsetLength;
-        
+
         if (hasSameCharsetLength) {
             return true;
         }
-        
+
         throw new Error(
             'Invalid XEncoder charset: '
             + data
         );
     };
-    
+
     validateCharCodes = function validateCharCodes(data) {
         var chars,
             dataLength,
             charCodeIndex,
             isValid;
-        
+
         chars = this.chars;
         dataLength = data.length;
         charCodeIndex = 0;
         isValid = true;
-        
+
         for (; isValid && charCodeIndex < dataLength; charCodeIndex += 1) {
             isValid = data[charCodeIndex] < charsetLength;
         }
-        
+
         if (isValid) {
             return true;
         }
-        
+
         throw new Error(
             'Invalid XEncoder data: '
             + data
         );
     };
-    
+
     (function detectCharsetLength() {
         var firstChar;
-            
+
         charsetLength = 1;
         firstChar = toString([0]);
-        
+
         for (; toString([charsetLength]) !== firstChar; charsetLength += 1);
     }());
-    
+
     return XEncoder;
 }(this));
