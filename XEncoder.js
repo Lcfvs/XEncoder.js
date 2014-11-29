@@ -119,8 +119,7 @@ XEncoder = (function (global) {
     };
 
     decode = function decode(validate, data) {
-        var charcodes,
-            chars,
+        var chars,
             delimiter,
             encodingLength,
             charsLength,
