@@ -34,7 +34,7 @@ XEncoder = (function () {
             + '=';
 
         patternString = '^(['
-            + charString
+            + charString.replace(/(\[|\])/g, '\\$1')
             + ']+)=(\\d+)=$';
 
         pattern = new RegExp(patternString);
