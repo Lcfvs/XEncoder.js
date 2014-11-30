@@ -9,157 +9,124 @@ XEncoder = (function () {
     'use strict';
 
     var defaultChars,
+        defaultDelimiter,
         charsetLength,
         XEncoder,
-        getEncodingLength,
-        encode,
-        decode,
         toString,
         toCharCodes,
-        validateString,
-        validateCharCodes;
+        toBinary;
 
     defaultChars = '0123456789'
         + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         + 'abcdefghijklmnopqrstuvwxyz'
-        + '+/';
+        + '-_';
+        
+    defaultDelimiter = '=';
 
-    XEncoder = function XEncoder(chars) {
-        var charString,
-            delimiter,
-            patternString,
-            pattern,
-            context;
+    XEncoder = {
+        encode: function (data, chars, delimiter) {
+            var charString,
+                delimiterString,
+                suffix,
+                binaries,
+                encoded,
+                iterator,
+                charCodes,
+                binCharsetLength,
+                blockLength,
+                binLength,
+                start,
+                charIndex;
+            
+            charString = chars
+            || defaultChars;
 
-        charString = chars
-        || defaultChars;
-
-        delimiter = '='
-            + charsetLength
-            + '=';
-
-        patternString = '^(['
-            + charString.replace(/(\[|\])/g, '\\$1')
-            + ']+)=(\\d+)=$';
-
-        pattern = new RegExp(patternString);
-
-        context = {
-            chars: charString,
-            delimiter: delimiter,
-            pattern: pattern,
-            encodingLength: getEncodingLength(charString.length)
-        };
-
-        return {
-            encode: encode.bind(context, validateCharCodes.bind(context)),
-            decode: decode.bind(context, validateString.bind(context))
-        };
-    };
-
-    getEncodingLength = function getEncodingLength(charsLength) {
-        var encodingLength,
-            rest;
-
-        encodingLength = 0;
-
-        rest = charsetLength - 1;
-
-        for (; rest!== 0; encodingLength += 1) {
-            rest = (rest - rest % charsLength) / charsLength;
-        }
-
-        return encodingLength;
-    };
-
-    encode = function encode(validate, data) {
-        var chars,
-            delimiter,
-            encodingLength,
-            charsLength,
-            encodedData,
-            dataIndex,
-            dataLength,
-            charCodes,
-            charCode,
-            encodedChar,
-            rest;
-
-        chars = this.chars;
-        delimiter = this.delimiter;
-        encodingLength = this.encodingLength;
-        charsLength = chars.length;
-        encodedData = '';
-        dataIndex = 0;
-        dataLength = data.length;
-
-        charCodes = toCharCodes(data);
-
-        validate(charCodes);
-
-        for (; dataIndex < dataLength; dataIndex += 1) {
-            charCode = charCodes[dataIndex];
-            encodedChar = '';
-
-            while (encodedChar.length < encodingLength) {
-                rest = charCode % charsLength;
-                charCode = (charCode - rest) / charsLength;
-                encodedChar = chars.charAt(rest) + encodedChar;
-            }
-
-            encodedData += encodedChar;
-        }
-
-        encodedData += delimiter;
-
-        return encodedData;
-    };
-
-    decode = function decode(validate, data) {
-        var chars,
-            delimiter,
-            encodingLength,
-            charsLength,
-            charCodes,
-            dataIndex,
-            dataLength,
-            charCode,
-            charIndex,
-            encodedChar,
-            rest,
-            decodedData;
-
-        validate(data);
-
-        chars = this.chars;
-        delimiter = this.delimiter;
-        encodingLength = this.encodingLength;
-        charsLength = chars.length;
-        charCodes = [];
-        dataIndex = 0;
-        dataLength = data.length - delimiter.length;
-
-        for (; dataIndex < dataLength; dataIndex += encodingLength) {
-            charCode = 0;
-            charIndex = 0;
-
-            for (; charIndex < encodingLength; charIndex += 1) {
-                rest = chars.indexOf(data[dataIndex + charIndex]);
+            delimiterString = delimiter
+            || defaultDelimiter;
+            
+            suffix = ['', charsetLength, charString, '']
+                .join(delimiterString);
                 
-                charCode = rest * Math.pow(
-                    charsLength,
-                    encodingLength - charIndex - 1
-                ) + charCode;
+            binaries = '';
+            encoded = '';
+            iterator = 0;
+            charCodes = toCharCodes(data);
+            binCharsetLength = toBinary(charsetLength).length - 1;
+            blockLength = toBinary(charString.length).length - 1;
+            
+            for (; iterator < charCodes.length; iterator += 1) {
+                binaries += toBinary(charCodes[iterator], binCharsetLength);
             }
 
-            charCodes.push(charCode);
+            iterator = 0;
+            binLength = binaries.length;
+            
+            for (; iterator < binLength;) {
+                start = iterator;
+                iterator += blockLength;
+                charIndex = parseInt(binaries.substring(start, iterator), 2);
+                encoded += charString[charIndex];
+            }
+            
+            encoded += suffix;
+
+            return encoded;
+        },
+        decode: function decode(data) {
+            var delimiter,
+                parts,
+                encoded,
+                charString,
+                binaries,
+                charCodes,
+                iterator,
+                encodedLength,
+                binCharsetLength,
+                blockLength,
+                charIndex,
+                binLength,
+                start,
+                charCode;
+            
+            delimiter = data[data.length - 1];
+            parts = data.split(delimiter);
+            
+            if (parts.length !== 4) {
+                throw new Error('Invalid data');
+            }
+            
+            if (+parts[1] !== charsetLength) {
+                throw new Error('Incompatible charset');
+            }
+            
+            encoded = parts[0];
+            charString = parts[2];
+            binaries = '';
+            charCodes = [];
+            iterator = 0;
+            encodedLength = encoded.length;
+            binCharsetLength = toBinary(charsetLength).length - 1;
+            blockLength = toBinary(charString.length).length - 1;
+
+            for (; iterator < encodedLength; iterator += 1) {
+                charIndex = charString.indexOf(encoded[iterator]);
+                binaries += toBinary(charIndex, blockLength);
+            }
+            
+            iterator = 0;
+            binLength = binaries.length;
+            
+            for (; iterator < binLength;) {
+                start = iterator;
+                iterator += binCharsetLength;
+                charCode = parseInt(binaries.substring(start, iterator), 2);
+                charCodes.push(charCode);
+            }
+            
+            return toString(charCodes);
         }
-
-        decodedData = toString(charCodes);
-
-        return decodedData;
     };
-
+    
     toString = (function () {
         var fromCharCode,
             toStr,
@@ -218,58 +185,22 @@ XEncoder = (function () {
         return toCharCodes;
     }());
 
-    validateString = function validateString(data) {
-        var delimiter,
-            pattern,
-            encodingLength,
-            lastIndex,
-            isValid,
-            hasSameCharsetLength;
-
-        delimiter = this.delimiter;
-        pattern = this.pattern;
-        encodingLength = this.encodingLength;
-        lastIndex = data.length - delimiter.length;
-
-        isValid = data === ''
-        || data.indexOf(delimiter) === lastIndex
-        && lastIndex % encodingLength === 0;
-
-        if (!isValid) {
-            throw new Error('Invalid XEncoder string: ' + data);
+    toBinary = function toBinary(value, length) {
+        var binary;
+        
+        binary = value.toString(2);
+        
+        if (!length) {
+            return binary;
         }
-
-        hasSameCharsetLength = + data.match(pattern)[2] === charsetLength;
-
-        if (hasSameCharsetLength) {
-            return true;
+        
+        while (binary.length < length) {
+            binary = '0' + binary;
         }
-
-        throw new Error('Invalid XEncoder charset: ' + data);
+        
+        return binary;
     };
-
-    validateCharCodes = function validateCharCodes(data) {
-        var chars,
-            dataLength,
-            charCodeIndex,
-            isValid;
-
-        chars = this.chars;
-        dataLength = data.length;
-        charCodeIndex = 0;
-        isValid = true;
-
-        for (; isValid && charCodeIndex < dataLength; charCodeIndex += 1) {
-            isValid = data[charCodeIndex] < charsetLength;
-        }
-
-        if (isValid) {
-            return true;
-        }
-
-        throw new Error('Invalid XEncoder data: ' + data);
-    };
-
+    
     (function detectCharsetLength() {
         var firstChar;
 
