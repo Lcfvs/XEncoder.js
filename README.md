@@ -15,6 +15,6 @@ var translator,
 
 translator = new XEncoder(/* [string chars] */);
 
-encoded = translator.encode('Hello world!'); // +/6+/Z+/g+/g+/j++U+/r+/j+/m+/g+/Y++V=65536=
+encoded = translator.encode('Hello world!'); // 01801b01i01i01l00W01t01l01o01i01a00X=65536=
 decoded = translator.decode(encoded); // Hello world!
 ```
