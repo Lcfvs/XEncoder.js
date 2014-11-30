@@ -47,14 +47,8 @@ XEncoder = (function () {
         };
 
         return {
-            encode: encode.bind(
-                context,
-                validateCharCodes.bind(context)
-            ),
-            decode: decode.bind(
-                context,
-                validateString.bind(context)
-            )
+            encode: encode.bind(context, validateCharCodes.bind(context)),
+            decode: decode.bind(context, validateString.bind(context))
         };
     };
 
@@ -94,9 +88,7 @@ XEncoder = (function () {
         dataIndex = 0;
         dataLength = data.length;
 
-        charCodes = data instanceof Array
-            ? [].concat(data)
-            : toCharCodes(data);
+        charCodes = toCharCodes(data);
 
         validate(charCodes);
 
@@ -144,16 +136,11 @@ XEncoder = (function () {
 
         for (; dataIndex < dataLength; dataIndex += encodingLength) {
             charCode = 0;
-            charIndex = encodingLength - 1;
+            charIndex = 0;
 
-            encodedChar = data.substr(
-                dataIndex,
-                encodingLength
-            );
-
-            for (; charIndex > 0; charIndex -= 1) {
-                rest = chars.indexOf(encodedChar[charIndex]);
-
+            for (; charIndex < encodingLength; charIndex += 1) {
+                rest = chars.indexOf(data[dataIndex + charIndex]);
+                
                 charCode = rest * Math.pow(
                     charsLength,
                     encodingLength - charIndex - 1
@@ -175,10 +162,7 @@ XEncoder = (function () {
 
         fromCharCode = String.fromCharCode;
 
-        toStr = fromCharCode.apply.bind(
-            fromCharCode,
-            String
-        );
+        toStr = fromCharCode.apply.bind(fromCharCode, String);
 
         toString = function toString(data) {
             var isArray,
@@ -218,10 +202,7 @@ XEncoder = (function () {
             length = str.length;
 
             for (; iterator < length; iterator += 1) {
-                charCode = toCharCode(
-                    str,
-                    iterator
-                );
+                charCode = toCharCode(str, iterator);
 
                 charCodes.push(charCode);
             }
@@ -250,10 +231,7 @@ XEncoder = (function () {
         && lastIndex % encodingLength === 0;
 
         if (!isValid) {
-            throw new Error(
-                'Invalid XEncoder string: '
-                + data
-            );
+            throw new Error('Invalid XEncoder string: ' + data);
         }
 
         hasSameCharsetLength = + data.match(pattern)[2] === charsetLength;
@@ -262,10 +240,7 @@ XEncoder = (function () {
             return true;
         }
 
-        throw new Error(
-            'Invalid XEncoder charset: '
-            + data
-        );
+        throw new Error('Invalid XEncoder charset: ' + data);
     };
 
     validateCharCodes = function validateCharCodes(data) {
@@ -287,10 +262,7 @@ XEncoder = (function () {
             return true;
         }
 
-        throw new Error(
-            'Invalid XEncoder data: '
-            + data
-        );
+        throw new Error('Invalid XEncoder data: ' + data);
     };
 
     (function detectCharsetLength() {
