@@ -1,19 +1,16 @@
-var translator,
-    encoded,
+var encoded,
     decoded;
 
-translator = XEncoder('01236456789');
+encoded = XEncoder.encode('Hello world!');
+decoded = XEncoder.decode(encoded);
 
-encoded = translator.encode('Hello world!');
-console.log(encoded);// 000550008200088000880009100029000980009100096000880008100030=65536=
+console.log('encoded : %s', encoded); // 04W0PG1i06m0Rm0W07S0Rm1o06m0P00X=65536=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_=
+console.log('decoded : %s', decoded); // Hello world!
 
-decoded = translator.decode(encoded);
-console.log(decoded.toString());//'Hello world!'
+console.log('--------------------------');
 
-translator = XEncoder();
+encoded = XEncoder.encode('Hello world!', '0123456789', '#');
+decoded = XEncoder.decode(encoded);
 
-encoded = translator.encode('Hello world!');
-console.log(encoded);// +/6+/Z+/g+/g+/j++U+/r+/j+/m+/g+/Y++V=65536=
-
-decoded = translator.decode(encoded);
-console.log(decoded.toString());//'Hello world!'
+console.log('encoded : %s', encoded); // 0004400031200154000660003360004000073400336001620006600031000041#65536#0123456789#
+console.log('decoded : %s', decoded); // Hello world!
