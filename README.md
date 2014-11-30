@@ -24,6 +24,6 @@ Specify your own encoding/delimiter :
 var encoded,
     decoded;
 
-encoded = XEncoder.encode('Hello world!', '0123456789', '#');// 0004400031200154000660003360004000073400336001620006600031000041#65536#0123456789#
+encoded = XEncoder.encode('Hello world!', '0123456789', '#'); // 0004400031200154000660003360004000073400336001620006600031000041#65536#0123456789#
 decoded = XEncoder.decode(encoded); // Hello world!
 ```
