@@ -1,6 +1,6 @@
 var XEncoder;
 
-XEncoder = (function (global) {
+XEncoder = (function () {
     'use strict';
 
     var defaultChars,
@@ -303,4 +303,4 @@ XEncoder = (function (global) {
     }());
 
     return XEncoder;
-}(this));
+}());
