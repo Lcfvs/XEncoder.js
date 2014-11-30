@@ -1,7 +1,7 @@
 XEncoder.js
 ===========
 
-An universal data encoder/decoder
+An universal data encoder/decoder<br />
 This project is under MIT License.
 
 
