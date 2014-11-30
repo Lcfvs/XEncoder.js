@@ -9,12 +9,9 @@ Usage :
 -------
 
 ```JavaScript
-var translator,
-    encoded,
+var encoded,
     decoded;
 
-translator = new XEncoder(/* [string chars] */);
-
-encoded = translator.encode('Hello world!'); // 01801b01i01i01l00W01t01l01o01i01a00X=65536=
-decoded = translator.decode(encoded); // Hello world!
+encoded = XEncoder.encode('Hello world!'); // 04W0PG1i06m0Rm0W07S0Rm1o06m0P00X=65536=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_=
+decoded = XEncoder.decode(encoded); // Hello world!
 ```
