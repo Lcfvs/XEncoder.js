@@ -123,13 +123,14 @@ XEncoder = (function (global) {
             delimiter,
             encodingLength,
             charsLength,
-            decodedData,
+            charCodes,
             dataIndex,
             dataLength,
             charCode,
             charIndex,
             encodedChar,
-            rest;
+            rest,
+            decodedData;
 
         validate(data);
 
@@ -137,7 +138,7 @@ XEncoder = (function (global) {
         delimiter = this.delimiter;
         encodingLength = this.encodingLength;
         charsLength = chars.length;
-        decodedData = [];
+        charCodes = [];
         dataIndex = 0;
         dataLength = data.length - delimiter.length;
 
@@ -159,13 +160,10 @@ XEncoder = (function (global) {
                 ) + charCode;
             }
 
-            decodedData.push(charCode);
+            charCodes.push(charCode);
         }
 
-        decodedData.toString = toString.bind(
-            global,
-            decodedData
-        );
+        decodedData = toString(charCodes);
 
         return decodedData;
     };
